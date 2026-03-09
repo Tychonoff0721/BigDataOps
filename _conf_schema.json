@@ -70,18 +70,5 @@
     "type": "string",
     "hint": "用于远程渲染图片的 RPC 服务器地址",
     "default": ""
-  },
-  "component_endpoints": {
-    "description": "各组件独立 API 端点",
-    "type": "object",
-    "hint": "为每个组件配置独立的 API 端点，优先级高于 api_endpoint",
-    "default": {
-      "spark": "",
-      "hadoop": "",
-      "flink": "",
-      "kafka": "",
-      "hdfs": "",
-      "yarn": ""
-    }
   }
 }
