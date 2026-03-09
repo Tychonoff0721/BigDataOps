@@ -15,6 +15,36 @@ class ConfigManager:
         """
         self._config = config
 
+    # ========== 测试模式配置 ==========
+
+    def is_test_mode(self) -> bool:
+        """检查是否启用测试模式（使用 Mock 数据）。"""
+        return self._config.get("test_mode", True)
+
+    # ========== 大模型 API 配置 ==========
+
+    def get_llm_api_url(self) -> str:
+        """获取大模型 API 地址。"""
+        return self._config.get("llm_api_url", "https://api.openai.com/v1/chat/completions")
+
+    def get_llm_api_key(self) -> str:
+        """获取大模型 API Key。"""
+        return self._config.get("llm_api_key", "")
+
+    def get_llm_model(self) -> str:
+        """获取大模型名称。"""
+        return self._config.get("llm_model", "gpt-3.5-turbo")
+
+    def get_llm_max_tokens(self) -> int:
+        """获取大模型最大 token 数。"""
+        return self._config.get("llm_max_tokens", 2000)
+
+    def get_llm_temperature(self) -> float:
+        """获取大模型温度参数。"""
+        return self._config.get("llm_temperature", 0.7)
+
+    # ========== 大数据组件 API 配置 ==========
+
     def get_api_endpoint(self) -> str:
         """获取大数据组件 API 端点地址。"""
         return self._config.get("api_endpoint", "")
@@ -67,3 +97,12 @@ class ConfigManager:
             配置值
         """
         return self._config.get(key, default)
+
+    def get_component_endpoints(self) -> dict[str, str]:
+        """
+        获取各组件的 API 端点配置。
+
+        Returns:
+            组件名称到端点 URL 的映射字典
+        """
+        return self._config.get("component_endpoints", {})

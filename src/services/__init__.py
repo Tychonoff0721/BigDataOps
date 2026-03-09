@@ -3,6 +3,7 @@
 from typing import Any
 
 from .base import BaseService, ComponentMetricsService
+from .data_normalizer import DataNormalizer
 from .exceptions import (
     BigDataAPIError,
     BigDataError,
@@ -11,11 +12,23 @@ from .exceptions import (
     ComponentNotFoundError,
     MetricsCollectionError,
 )
+from .llm_analyzer import LLMAnalyzer
+from .metrics_collector import (
+    BaseMetricsCollector,
+    MockMetricsCollector,
+    RealMetricsCollector,
+    MetricsCollectorFactory,
+)
 from .types import (
+    AlertItem,
+    AlertLevel,
+    AnalysisReport,
+    AnalysisResult,
     ComponentMetrics,
     ComponentType,
     HealthStatus,
     MessageResult,
+    NormalizedMetrics,
 )
 
 
@@ -200,17 +213,32 @@ class BigDataService(ComponentMetricsService, BaseService):
 
 
 __all__ = [
+    # 旧服务类（保留兼容）
     "BigDataService",
     "BaseService",
     "ComponentMetricsService",
+    # 新服务类
+    "LLMAnalyzer",
+    "DataNormalizer",
+    "BaseMetricsCollector",
+    "MockMetricsCollector",
+    "RealMetricsCollector",
+    "MetricsCollectorFactory",
+    # 异常类
     "BigDataAPIError",
     "BigDataRateLimitError",
     "BigDataError",
     "CacheError",
     "ComponentNotFoundError",
     "MetricsCollectionError",
+    # 类型定义
+    "AlertItem",
+    "AlertLevel",
+    "AnalysisReport",
+    "AnalysisResult",
     "ComponentMetrics",
     "ComponentType",
     "HealthStatus",
     "MessageResult",
+    "NormalizedMetrics",
 ]

@@ -1,5 +1,6 @@
 """组件渲染器模块"""
 
+import time
 from typing import Any
 
 from .base_renderer import BaseRenderer
@@ -210,3 +211,210 @@ class ComponentRenderer(BaseRenderer):
         }
         
         return key_map.get(key, key.replace("_", " ").title())
+
+    async def render_analysis_report(self, data: dict[str, Any]) -> str:
+        """
+        渲染完整的分析报告。
+
+        Args:
+            data: 包含分析报告数据的字典
+
+        Returns:
+            格式化后的文本报告
+        """
+        component = data.get("component", "Unknown")
+        raw_metrics = data.get("raw_metrics", {})
+        normalized_metrics = data.get("normalized_metrics")
+        analysis = data.get("analysis")
+        collection_mode = data.get("collection_mode", "unknown")
+        report_time = data.get("report_time", time.time())
+
+        lines = []
+        
+        # 标题
+        lines.append(f"📊 {component} 智能分析报告")
+        lines.append("=" * 50)
+        lines.append("")
+        
+        # 基本信息
+        lines.append(f"🕐 报告时间：{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(report_time))}")
+        lines.append(f"📡 数据模式：{'🧪 测试数据' if collection_mode == 'mock' else '🔗 真实数据'}")
+        lines.append("")
+
+        # 一、指标概览
+        lines.append("━" * 50)
+        lines.append("📋 一、指标概览")
+        lines.append("━" * 50)
+        lines.append("")
+        
+        if normalized_metrics:
+            lines.append("| 指标名称 | 原始值 | 正则化值 | 单位 |")
+            lines.append("|----------|--------|----------|------|")
+            for key, raw_value in raw_metrics.items():
+                if key in ("component", "health"):
+                    continue
+                norm_value = normalized_metrics.normalized_values.get(key, 0)
+                unit = normalized_metrics.units.get(key, "")
+                lines.append(f"| {key} | {raw_value} | {norm_value:.2f} | {unit} |")
+        lines.append("")
+
+        # 二、健康评估
+        if analysis:
+            lines.append("━" * 50)
+            lines.append("🏥 二、健康评估")
+            lines.append("━" * 50)
+            lines.append("")
+            
+            # 健康评分
+            health_score = analysis.health_score
+            status = analysis.status
+            status_emoji = self._get_health_emoji(status)
+            
+            # 评分条
+            score_bar = self._generate_score_bar(health_score)
+            lines.append(f"健康评分：{score_bar} {health_score}/100")
+            lines.append(f"状态判定：{status_emoji} {status.upper()}")
+            lines.append(f"\n📝 摘要：{analysis.summary}")
+            lines.append("")
+
+            # 三、详细分析
+            if analysis.details:
+                lines.append("━" * 50)
+                lines.append("🔍 三、详细分析")
+                lines.append("━" * 50)
+                lines.append("")
+                for i, detail in enumerate(analysis.details, 1):
+                    lines.append(f"  {i}. {detail}")
+                lines.append("")
+
+            # 四、预警信息
+            if analysis.alerts:
+                lines.append("━" * 50)
+                lines.append("⚠️ 四、预警信息")
+                lines.append("━" * 50)
+                lines.append("")
+                lines.append("| 级别 | 指标 | 当前值 | 阈值 | 描述 |")
+                lines.append("|------|------|--------|------|------|")
+                for alert in analysis.alerts:
+                    level_emoji = self._get_alert_emoji(alert.level)
+                    lines.append(
+                        f"| {level_emoji} {alert.level.value} | {alert.metric_name} | "
+                        f"{alert.current_value} | {alert.threshold} | {alert.description} |"
+                    )
+                lines.append("")
+                lines.append("💡 预警建议：")
+                for i, alert in enumerate(analysis.alerts, 1):
+                    lines.append(f"  {i}. [{alert.metric_name}] {alert.suggestion}")
+                lines.append("")
+
+            # 五、性能预测
+            lines.append("━" * 50)
+            lines.append("📈 五、性能预测")
+            lines.append("━" * 50)
+            lines.append("")
+            lines.append(f"{analysis.performance_prediction}")
+            lines.append("")
+
+            # 六、故障风险
+            if analysis.failure_risks:
+                lines.append("━" * 50)
+                lines.append("🚨 六、故障风险")
+                lines.append("━" * 50)
+                lines.append("")
+                for i, risk in enumerate(analysis.failure_risks, 1):
+                    lines.append(f"  ⚡ {risk}")
+                lines.append("")
+
+            # 七、改进建议
+            if analysis.recommendations:
+                lines.append("━" * 50)
+                lines.append("💡 七、改进建议")
+                lines.append("━" * 50)
+                lines.append("")
+                for i, rec in enumerate(analysis.recommendations, 1):
+                    lines.append(f"  {i}. {rec}")
+                lines.append("")
+
+        lines.append("=" * 50)
+        lines.append("📌 提示：使用 /bigdata-help 查看所有命令")
+
+        return "\n".join(lines)
+
+    def _generate_score_bar(self, score: int, width: int = 10) -> str:
+        """
+        生成评分进度条。
+
+        Args:
+            score: 分数 (0-100)
+            width: 进度条宽度
+
+        Returns:
+            进度条字符串
+        """
+        filled = int(score / 100 * width)
+        empty = width - filled
+        
+        if score >= 80:
+            bar_char = "🟩"
+        elif score >= 60:
+            bar_char = "🟨"
+        elif score >= 40:
+            bar_char = "🟧"
+        else:
+            bar_char = "🟥"
+        
+        return bar_char * filled + "⬜" * empty
+
+    def _get_alert_emoji(self, level: Any) -> str:
+        """
+        获取预警级别对应的 emoji。
+
+        Args:
+            level: 预警级别
+
+        Returns:
+            对应的 emoji
+        """
+        from ..services.types import AlertLevel
+        
+        emoji_map = {
+            AlertLevel.INFO: "ℹ️",
+            AlertLevel.WARNING: "⚠️",
+            AlertLevel.CRITICAL: "🔴",
+            AlertLevel.EMERGENCY: "🆘",
+        }
+        return emoji_map.get(level, "❓")
+
+    async def render_alert_table(self, data: dict[str, Any]) -> str:
+        """
+        渲染预警表格。
+
+        Args:
+            data: 包含预警数据的字典
+
+        Returns:
+            格式化后的预警表格
+        """
+        component = data.get("component", "Unknown")
+        alerts = data.get("alerts", [])
+
+        lines = []
+        lines.append(f"⚠️ {component} 预警信息")
+        lines.append("=" * 50)
+        lines.append("")
+
+        if not alerts:
+            lines.append("✅ 当前无预警信息")
+        else:
+            lines.append("| 级别 | 指标名称 | 当前值 | 阈值 | 描述 | 建议 |")
+            lines.append("|------|----------|--------|------|------|------|")
+            for alert in alerts:
+                level_emoji = self._get_alert_emoji(alert.level)
+                lines.append(
+                    f"| {level_emoji} {alert.level.value} | {alert.metric_name} | "
+                    f"{alert.current_value} | {alert.threshold} | {alert.description} | {alert.suggestion} |"
+                )
+
+        lines.append("")
+        lines.append("=" * 50)
+        return "\n".join(lines)

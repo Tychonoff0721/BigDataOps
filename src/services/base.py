@@ -1,5 +1,6 @@
 """服务层模块"""
 
+import asyncio
 from typing import Any
 
 import aiohttp
